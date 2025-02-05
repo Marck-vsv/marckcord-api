@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma.service';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -18,7 +18,10 @@ export class UserService {
 
             return user.length === 0;
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
@@ -35,7 +38,10 @@ export class UserService {
 
             return user;
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
@@ -43,7 +49,10 @@ export class UserService {
         try {
             return this.db.user.findMany();
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
@@ -55,7 +64,10 @@ export class UserService {
                 },
             });
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
@@ -74,19 +86,93 @@ export class UserService {
 
             return user;
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    async updatePassword(email: string, password: string, newPassword: string) {
+        try {
+            const user = await this.db.user.findUnique({
+                where: { email },
+                select: { password: true },
+            });
+
+            if (!user) {
+                throw new HttpException(
+                    'User not found.',
+                    HttpStatus.NOT_FOUND,
+                );
+            }
+
+            const isPasswordValid = await bcrypt.compare(
+                password,
+                user.password,
+            );
+
+            if (!isPasswordValid) {
+                throw new HttpException(
+                    'Password is incorrect.',
+                    HttpStatus.FORBIDDEN,
+                );
+            }
+
+            if (newPassword === password) {
+                throw new HttpException(
+                    'New password must be different from the old one.',
+                    HttpStatus.FORBIDDEN,
+                );
+            }
+
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+            await this.db.$transaction([
+                this.db.user.update({
+                    where: {
+                        email,
+                    },
+                    data: {
+                        password: hashedNewPassword,
+                    },
+                }),
+            ]);
+
+            return { message: 'Password updated successfully.' };
+        } catch (error) {
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 
     async remove(username: string) {
         try {
+            const user = await this.db.user.findUnique({
+                where: {
+                    username,
+                },
+            });
+
+            if (!user) {
+                throw new HttpException(
+                    'User not found.',
+                    HttpStatus.NOT_FOUND,
+                );
+            }
+
             return this.db.user.delete({
                 where: {
                     username,
                 },
             });
         } catch (error) {
-            return error;
+            throw new HttpException(
+                error.message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 }
