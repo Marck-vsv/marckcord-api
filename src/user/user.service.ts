@@ -56,18 +56,15 @@ export class UserService {
         }
     }
 
-    async findOne(username: string) {
+    async findOne(identifier: string) {
         try {
-            return this.db.user.findUnique({
+            return this.db.user.findFirst({
                 where: {
-                    username,
+                    OR: [{ username: identifier }, { email: identifier }],
                 },
             });
         } catch (error) {
-            throw new HttpException(
-                error.message,
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+            throw new HttpException(error.message, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -93,60 +90,51 @@ export class UserService {
         }
     }
 
-    async updatePassword(email: string, password: string, newPassword: string) {
-        try {
-            const user = await this.db.user.findUnique({
-                where: { email },
-                select: { password: true },
-            });
+    // async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    //     const { email, password, newPassword } = updatePasswordDto;
 
-            if (!user) {
-                throw new HttpException(
-                    'User not found.',
-                    HttpStatus.NOT_FOUND,
-                );
-            }
+    //     try {
+    //         const user = await this.db.user.findFirst({
+    //             where: {
+    //                 email,
+    //             },
+    //         });
+    //         if (!user) {
+    //             throw new HttpException(
+    //                 'User not found.',
+    //                 HttpStatus.NOT_FOUND,
+    //             );
+    //         }
 
-            const isPasswordValid = await bcrypt.compare(
-                password,
-                user.password,
-            );
+    //         const isPasswordValid = await bcrypt.compare(
+    //             password,
+    //             user.password,
+    //         );
 
-            if (!isPasswordValid) {
-                throw new HttpException(
-                    'Password is incorrect.',
-                    HttpStatus.FORBIDDEN,
-                );
-            }
+    //         if (!isPasswordValid) {
+    //             throw new HttpException(
+    //                 'Invalid password.',
+    //                 HttpStatus.UNAUTHORIZED,
+    //             );
+    //         }
 
-            if (newPassword === password) {
-                throw new HttpException(
-                    'New password must be different from the old one.',
-                    HttpStatus.FORBIDDEN,
-                );
-            }
+    //         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-            await this.db.$transaction([
-                this.db.user.update({
-                    where: {
-                        email,
-                    },
-                    data: {
-                        password: hashedNewPassword,
-                    },
-                }),
-            ]);
-
-            return { message: 'Password updated successfully.' };
-        } catch (error) {
-            throw new HttpException(
-                error.message,
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
-        }
-    }
+    //         await this.db.user.update({
+    //             where: {
+    //                 email,
+    //             },
+    //             data: {
+    //                 password: hashedNewPassword,
+    //             },
+    //         });
+    //     } catch (error) {
+    //         throw new HttpException(
+    //             error.message,
+    //             HttpStatus.INTERNAL_SERVER_ERROR,
+    //         );
+    //     }
+    // }
 
     async remove(username: string) {
         try {
