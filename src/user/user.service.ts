@@ -56,11 +56,11 @@ export class UserService {
         }
     }
 
-    async findOne(identifier: string) {
+    async findOne(username: string) {
         try {
             return this.db.user.findFirst({
                 where: {
-                    OR: [{ username: identifier }, { email: identifier }],
+                    username,
                 },
             });
         } catch (error) {
@@ -89,52 +89,6 @@ export class UserService {
             );
         }
     }
-
-    // async updatePassword(updatePasswordDto: UpdatePasswordDto) {
-    //     const { email, password, newPassword } = updatePasswordDto;
-
-    //     try {
-    //         const user = await this.db.user.findFirst({
-    //             where: {
-    //                 email,
-    //             },
-    //         });
-    //         if (!user) {
-    //             throw new HttpException(
-    //                 'User not found.',
-    //                 HttpStatus.NOT_FOUND,
-    //             );
-    //         }
-
-    //         const isPasswordValid = await bcrypt.compare(
-    //             password,
-    //             user.password,
-    //         );
-
-    //         if (!isPasswordValid) {
-    //             throw new HttpException(
-    //                 'Invalid password.',
-    //                 HttpStatus.UNAUTHORIZED,
-    //             );
-    //         }
-
-    //         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-    //         await this.db.user.update({
-    //             where: {
-    //                 email,
-    //             },
-    //             data: {
-    //                 password: hashedNewPassword,
-    //             },
-    //         });
-    //     } catch (error) {
-    //         throw new HttpException(
-    //             error.message,
-    //             HttpStatus.INTERNAL_SERVER_ERROR,
-    //         );
-    //     }
-    // }
 
     async remove(username: string) {
         try {
