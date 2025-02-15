@@ -6,7 +6,7 @@ import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './local.strategy';
+import { LocalStrategy } from './strategy/local.strategy';
 
 @Module({
     imports: [
@@ -14,7 +14,7 @@ import { LocalStrategy } from './local.strategy';
         PassportModule,
         JwtModule.register({
             secret: process.env.SECRET,
-            signOptions: { expiresIn: '1h' },
+            signOptions: { expiresIn: '5s' },
         }),
     ],
     providers: [AuthService, UserService, PrismaService, LocalStrategy],

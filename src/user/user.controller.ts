@@ -8,7 +8,9 @@ import {
     Param,
     Patch,
     Post,
+    UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
@@ -68,6 +70,7 @@ export class UserController {
         );
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get(':username')
     async findOne(@Param('username') username: string) {
         const user = await this.usersService.findOne(username);
@@ -86,6 +89,7 @@ export class UserController {
         };
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch(':username')
     async update(
         @Param('username') username: string,
@@ -95,13 +99,6 @@ export class UserController {
         await this.usersService.update(username, updateUserDto);
         return { message: 'User updated successfully.' };
     }
-
-    // @Patch('/updatePassword')
-    // async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
-    //     await this.ensureUserExists(updatePasswordDto.email);
-    //     await this.usersService.updatePassword(updatePasswordDto);
-    //     return { message: 'Password updated successfully.' };
-    // }
 
     @Delete(':username')
     async remove(@Param('username') username: string) {
