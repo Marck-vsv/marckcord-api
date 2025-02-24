@@ -15,7 +15,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
-@Controller('user')
+@Controller('api/user')
 export class UserController {
     constructor(private readonly usersService: UserService) {}
 
@@ -27,7 +27,7 @@ export class UserController {
         return user;
     }
 
-    @Post()
+    @Post('register')
     async create(@Body() createUserDto: CreateUserDto) {
         if (!createUserDto.displayname || createUserDto.displayname === '') {
             createUserDto.displayname = createUserDto.username;
@@ -38,7 +38,7 @@ export class UserController {
         return { message: 'User created successfully.' };
     }
 
-    @Get()
+    @Get('get')
     async findAll() {
         const users = await this.usersService.findAll();
 
@@ -71,7 +71,7 @@ export class UserController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get(':username')
+    @Get('get/:username')
     async findOne(@Param('username') username: string) {
         const user = await this.usersService.findOne(username);
 
@@ -90,7 +90,7 @@ export class UserController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Patch(':username')
+    @Patch('update/:username')
     async update(
         @Param('username') username: string,
         @Body() updateUserDto: UpdateUserDto,
@@ -100,7 +100,7 @@ export class UserController {
         return { message: 'User updated successfully.' };
     }
 
-    @Delete(':username')
+    @Delete('delete/:username')
     async remove(@Param('username') username: string) {
         await this.ensureUserExists(username);
         await this.usersService.remove(username);
